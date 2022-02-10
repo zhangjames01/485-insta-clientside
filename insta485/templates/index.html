@@ -5,7 +5,19 @@
 
 <title>insta485</title>
 
+...
 
+<body>
+    <!-- Plain old HTML and jinja2 nav bar goes here -->
+
+
+    <div id="reactEntry">
+        Loading ...
+    </div>
+    <!-- Load JavaScript -->
+    <script type="text/javascript" src="{{ url_for('static', filename='js/bundle.js') }}"></script>
+</body>
+...
 <div class="topleft">
 
     <a href="/">
@@ -24,7 +36,7 @@
         {{ logname }}
     </a>
 
-</div>
+    <!-- </div>
 {% for post in posts %}
 <div class="card1">
 
@@ -53,14 +65,14 @@
 
 
         {%if post.logname_likes %}
-        <!-- unlike button -->
+        THIS WAS AN "unlike button" COMMENT
         <form action="/likes/?target=/" method="post" enctype="multipart/form-data">
             <input type="hidden" name="operation" value="unlike" />
             <input type="hidden" name="postid" value="{{post.postid}}" />
             <input type="submit" name="unlike" value="unlike" />
         </form>
         {%else%}
-        <!-- like button -->
+        THIS WAS AN "like button" COMMENT
         <form action="/likes/?target=/" method="post" enctype="multipart/form-data">
             <input type="hidden" name="operation" value="like" />
             <input type="hidden" name="postid" value="{{post.postid}}" />
@@ -76,7 +88,7 @@
         {{comment.text}}
 
         {%endfor%}
-        <!-- comment button -->
+        THIS WAS AN 'comment button' comment
         <form action="/comments/?target=/" method="post" enctype="multipart/form-data">
             <input type="hidden" name="operation" value="create" />
             <input type="hidden" name="postid" value="{{post.postid}}" />
@@ -87,6 +99,6 @@
 
 </div>
 
-{%endfor%}
+{%endfor%} -->
 
 </html>
