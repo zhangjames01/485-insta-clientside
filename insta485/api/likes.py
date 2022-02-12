@@ -39,8 +39,8 @@ def create_like():
         connection = insta485.model.get_db()
         cur = connection.execute(
             "INSERT INTO likes(owner, postid) "
-            "VALUES (?, ?) "
-            ([logname], postid)
+            "VALUES (?, ?) ",
+            (logname, postid)
         )
         connection = insta485.model.get_db()
         cur = connection.execute(
