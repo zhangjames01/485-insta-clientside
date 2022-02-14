@@ -11,12 +11,23 @@ def get_posts():
     # Authenticate the user
     if flask.session.get('username'):
         logname = flask.session.get('username')
+    elif not flask.request.authorization:
+        flask.abort(403)
     else:
         logname = authenticate_user(flask.request.authorization['username'], flask.request.authorization['password'])
 
     size = flask.request.args.get('size', default=10, type=int)    
     page = flask.request.args.get('page', default=0, type=int)
-    postid_lte = flask.request.args.get('postid_lte', default=sys.maxsize)
+    postid_lte = flask.request.args.get('postid_lte', default=-1)
+    if page < 0 or size < 0:
+        flask.abort(400)
+    if postid_lte == -1:
+        connection = insta485.model.get_db()
+        cur = connection.execute(
+            "SELECT MAX(postid) "
+            "FROM posts "
+        )
+        postid_lte = cur.fetchone()['MAX(postid)']
     results = []
 
     connection = insta485.model.get_db()
@@ -25,44 +36,40 @@ def get_posts():
         "FROM posts "
         "WHERE owner IN "
         "(SELECT username2 FROM following WHERE username1 = ?) "
-        "AND postid < ? "
+        "AND postid <= ? "
         "OR owner = ? "
-        "AND postid < ? "
-        "ORDER BY postid DESC",
-        (logname, postid_lte, logname, postid_lte)
+        "AND postid <= ? "
+        "ORDER BY postid DESC "        
+        "LIMIT ? OFFSET ?;",
+        (logname, postid_lte, logname, postid_lte, size, (size*page))
     )
     post_data = cur.fetchall()
-    
+    connection = insta485.model.get_db()
+    cur = connection.execute(
+        "SELECT COUNT(*) "
+        "FROM posts "
+        "WHERE owner IN "
+        "(SELECT username2 FROM following WHERE username1 = ?) "
+        "AND postid <= ? "
+        "OR owner = ? "
+        "AND postid <= ? ",
+        (logname, postid_lte, logname, postid_lte)
+    )
+    post_data_total = cur.fetchone()
+
     max_attained = False
-    maxid = -1
-    for i in range(size*page , size*(page+1)):
-        if i >= len(post_data):
-            connection = insta485.model.get_db()
-            cur = connection.execute(
-                "SELECT MAX(postid) "
-                "FROM posts "
-            )
-            maxid = cur.fetchone()['MAX(postid)']
-            max_attained = True
-            break
-        if post_data[i]['postid'] <= int(postid_lte):
-            results.append({"postid": int(post_data[i]['postid']),
-                            "url": flask.request.path + str((post_data[i]['postid'])) + '/'})
-            maxid = max(maxid, post_data[i]['postid'])
-        else:
-            connection = insta485.model.get_db()
-            cur = connection.execute(
-                "SELECT MAX(postid) "
-                "FROM posts "
-            )
-            maxid = cur.fetchone()['MAX(postid)']
-            max_attained = True
-            break
+
+    if post_data_total['COUNT(*)'] < (page+1)*size:
+        max_attained=True
+
+    for post in post_data:
+        results.append({"postid": int(post['postid']),
+                        "url": flask.request.path + str((post['postid'])) + '/'})
 
     if max_attained:
         next_page = ""
     else:
-        next_page = flask.request.path+("?size="+str(size))+("&page="+str(page+1))+("&postid_lte=")+str(maxid)
+        next_page = flask.request.path+("?size="+str(size))+("&page="+str(page+1))+("&postid_lte=")+str(postid_lte)
         
     if flask.request.args:
         context = {
@@ -76,7 +83,7 @@ def get_posts():
             "results": results,
             "url": flask.request.path
         }
-    
+
     return flask.jsonify(**context)
 
 @insta485.app.route('/api/v1/posts/<int:postid_url_slug>/')
@@ -193,5 +200,5 @@ def get_post(postid_url_slug):
                 "postid": postid_url_slug ,
                 "url": flask.request.path
     }
-    
+
     return flask.jsonify(**context)
