@@ -1,16 +1,23 @@
 """REST API for comments."""
 import flask
 import insta485
+from insta485.api.helper import authenticate_user
+from insta485.api.helper import InvalidUsage
 
 
 @insta485.app.route('/api/v1/comments/', methods = ['POST'])
 def create_comment():
     """Add one comment to a post."""
-    postid = flask.request.args.get('postid')
-    text = flask.request.args.get('text')
-    #TODO FIX LATER WITH AUTHENTIFICATION
-    logname = 'awdeorio'
+    # Authenticate the user
+    if flask.session.get('username'):
+        logname = flask.session.get('username')
+    else:
+        logname = authenticate_user(flask.request.authorization['username'], flask.request.authorization['password'])
 
+    postid = flask.request.args.get('postid')
+    json_data = flask.request.json
+    text = json_data["text"]
+    
     # Insert comment into table
     connection = insta485.model.get_db()
     cur = connection.execute(
@@ -22,28 +29,31 @@ def create_comment():
     # Retrieve the ID of the inserted comment
     connection = insta485.model.get_db()
     cur = connection.execute(
-        "SELECT last_insert_rowid() "
+        "SELECT last_insert_rowid() ",
     )
     recent_id = cur.fetchone()
     logname_owns = True
 
     context = {
-        "commentid" : recent_id['commentid'],
+        "commentid" : recent_id['last_insert_rowid()'],
         "lognameOwnsthis": logname_owns,
         "owner": logname,
         "ownerShowUrl": "/users/"+logname+"/",
         "text": text,
-        "url": "/api/v1/comments/"+ str(recent_id) +"/"
+        "url": "/api/v1/comments/"+ str(recent_id['last_insert_rowid()']) +"/"
     }
 
     return flask.jsonify(**context), 201
 
 
 @insta485.app.route('/api/v1/comments/<commentid>/', methods = ['DELETE'])
-def delete_comment():
+def delete_comment(commentid):
     """Delete a comment."""
-    logname = 'awdeorio'
-    commentid = flask.request.args.get('commentid')
+    # Authenticate the user
+    if flask.session.get('username'):
+        logname = flask.session.get('username')
+    else:
+        logname = authenticate_user(flask.request.authorization['username'], flask.request.authorization['password'])
 
     # If commentid DNE, return 404
     # If the user does not own the comment, return 403
@@ -61,11 +71,11 @@ def delete_comment():
         flask.abort(403)
 
     # Delete the comment
-    connection = insta485.model.getdb()
+    connection = insta485.model.get_db()
     cur = connection.execute(
         "DELETE FROM comments "
         "WHERE commentid = ? AND owner = ? ",
-        ([commentid], logname)
+        (commentid, logname)
     )
 
-    return(403)
+    return('', 204)

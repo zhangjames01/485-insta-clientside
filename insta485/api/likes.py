@@ -1,14 +1,20 @@
 """REST API for likes."""
 import flask
 import insta485
+from insta485.api.helper import authenticate_user
+from insta485.api.helper import InvalidUsage
 
 
 @insta485.app.route('/api/v1/likes/', methods = ['POST'])
 def create_like():
     """Create one like for a specific post."""
+    # Authenticate the user
+    if flask.session.get('username'):
+        logname = flask.session.get('username')
+    else:
+        logname = authenticate_user(flask.request.authorization['username'], flask.request.authorization['password'])
+
     postid = flask.request.args.get('postid')
-    #TODO FIX LATER WITH AUTHENTIFICATION
-    logname = 'awdeorio'
 
     connection = insta485.model.get_db()
     cur = connection.execute(
@@ -31,8 +37,8 @@ def create_like():
         )
         data = cur.fetchone()
         context = {
-            "likeid": data['likeid'],
-            "url": flask.request.path + '/'+ str(data['likeid']) + '/'
+            "likeid": str(data['likeid']),
+            "url": flask.request.path + str(data['likeid']) + '/'
         }
         return flask.jsonify(**context), 200
     else:
@@ -51,8 +57,8 @@ def create_like():
         )
         data = cur.fetchone()
         context = {
-            "likeid": data['likeid'],
-            "url": flask.request.path + '/'+ str(data['likeid']) + '/'
+            "likeid": str(data['likeid']),
+            "url": flask.request.path + str(data['likeid']) + '/'
         }
         return flask.jsonify(**context), 201
         
@@ -60,8 +66,11 @@ def create_like():
 @insta485.app.route('/api/v1/likes/<likeid>/', methods = ['DELETE'])
 def delete_like(likeid):
     """Delete one like, return 204 on success."""
-    logname = 'awdeorio'
-    #likeid = flask.request.args.get('likeid')
+    # Authenticate the user
+    if flask.session.get('username'):
+        logname = flask.session.get('username')
+    else:
+        logname = authenticate_user(flask.request.authorization['username'], flask.request.authorization['password'])
 
     # If likeid DNE, return 404
     # If user does not own the like, return 403

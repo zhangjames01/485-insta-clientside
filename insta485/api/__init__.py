@@ -1,6 +1,7 @@
 """Insta485 REST API."""
 import flask
 import insta485
+import hashlib
 
 @insta485.app.route('/api/v1/')
 def get_services():
@@ -12,6 +13,7 @@ def get_services():
         "url": flask.request.path,
     }
     return flask.jsonify(**context)
+
 
 from insta485.api.posts import get_posts
 from insta485.api.posts import get_post

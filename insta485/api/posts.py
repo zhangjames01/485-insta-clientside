@@ -1,59 +1,103 @@
 """REST API for posts."""
 import flask
 import insta485
-
+from insta485.api.helper import authenticate_user
+from insta485.api.helper import InvalidUsage
+import sys
 
 @insta485.app.route('/api/v1/posts/')
 def get_posts():
     """Return 10 newest posts."""
-    logname = 'awdeorio'
+    # Authenticate the user
+    if flask.session.get('username'):
+        logname = flask.session.get('username')
+    else:
+        logname = authenticate_user(flask.request.authorization['username'], flask.request.authorization['password'])
+
     size = flask.request.args.get('size', default=10, type=int)    
-    page = flask.request.args.get('page', default=1, type=int)
-    postid_lte = flask.request.args.get('postid_lte', default=size*page)
+    page = flask.request.args.get('page', default=0, type=int)
+    postid_lte = flask.request.args.get('postid_lte', default=sys.maxsize)
     results = []
+
     connection = insta485.model.get_db()
     cur = connection.execute(
         "SELECT posts.postid "
         "FROM posts "
         "WHERE owner IN "
         "(SELECT username2 FROM following WHERE username1 = ?) "
-        "OR owner = ?"
+        "AND postid < ? "
+        "OR owner = ? "
+        "AND postid < ? "
         "ORDER BY postid DESC",
-        (logname, logname)
+        (logname, postid_lte, logname, postid_lte)
     )
     post_data = cur.fetchall()
-    max_attained = False
     
-    for i in range(size*(page-1), size*page):
+    max_attained = False
+    maxid = -1
+    for i in range(size*page , size*(page+1)):
         if i >= len(post_data):
+            connection = insta485.model.get_db()
+            cur = connection.execute(
+                "SELECT MAX(postid) "
+                "FROM posts "
+            )
+            maxid = cur.fetchone()['MAX(postid)']
             max_attained = True
             break
-        if post_data[i]['postid'] <= postid_lte:
-            path = flask.request.path + '/' + str((post_data[i]['postid']))
+        if post_data[i]['postid'] <= int(postid_lte):
             results.append({"postid": int(post_data[i]['postid']),
                             "url": flask.request.path + str((post_data[i]['postid'])) + '/'})
+            maxid = max(maxid, post_data[i]['postid'])
         else:
+            connection = insta485.model.get_db()
+            cur = connection.execute(
+                "SELECT MAX(postid) "
+                "FROM posts "
+            )
+            maxid = cur.fetchone()['MAX(postid)']
             max_attained = True
             break
 
     if max_attained:
         next_page = ""
     else:
-        next_page = flask.request.path+("?size="+str(size))+("&page="+str(page+1))+("&postid_lte")+str(postid_lte)
+        next_page = flask.request.path+("?size="+str(size))+("&page="+str(page+1))+("&postid_lte=")+str(maxid)
         
-    context = {
-        "next": next_page,
-        "results": results,
-        "url": flask.request.path
-    }
+    if flask.request.args:
+        context = {
+            "next": next_page,
+            "results": results,
+            "url": flask.request.full_path
+        }
+    else:
+        context = {
+            "next": next_page,
+            "results": results,
+            "url": flask.request.path
+        }
     
     return flask.jsonify(**context)
 
 @insta485.app.route('/api/v1/posts/<int:postid_url_slug>/')
 def get_post(postid_url_slug):
     """"Return the details for one post."""
-    #logname = flask.session.get('username')
-    logname = 'awdeorio'
+    # Authenticate the user
+    if flask.session.get('username'):
+        logname = flask.session.get('username')
+    else:
+        logname = authenticate_user(flask.request.authorization['username'], flask.request.authorization['password'])
+
+    connection=insta485.model.get_db()
+    cur = connection.execute(
+        "SELECT COUNT(*) "
+        "FROM posts "
+        "WHERE postid =?",
+        ([postid_url_slug])
+    )
+    postid_check = cur.fetchall()
+    if postid_check[0]['COUNT(*)'] == 0:
+        raise InvalidUsage('Not Found', status_code=404)
 
     # COMMENTS SECTION
     comments = []
@@ -143,7 +187,7 @@ def get_post(postid_url_slug):
                 "imgUrl": "/uploads/" + post_data[0]['filename'],
                 "likes": likes,
                 "owner": post_data[0]['owner'],
-                "ownerImgUrl": owner_pfp[0]['filename'] + '/',
+                "ownerImgUrl": "/uploads/" + owner_pfp[0]['filename'],
                 "ownerShowUrl": "/users/" + post_data[0]['owner'] + '/',
                 "postShowUrl": "/posts/" + str(postid_url_slug) + '/',
                 "postid": postid_url_slug ,
