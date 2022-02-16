@@ -9,7 +9,7 @@ def authenticate_user(username, password):
 
     username = flask.request.authorization['username']
     password = flask.request.authorization['password']
-    
+
     connection = insta485.model.get_db()
     cur = connection.execute(
         "SELECT password "
@@ -20,7 +20,7 @@ def authenticate_user(username, password):
     db_password = cur.fetchone()
     if not db_password:
         raise InvalidUsage('FORBIDDEN', status_code=403)
-    
+
     if pass_check(password, db_password['password']):
         return username
     flask.abort(403)

@@ -9,7 +9,24 @@
 
 <body>
     <!-- Plain old HTML and jinja2 nav bar goes here -->
+    <div class="topleft">
 
+        <a href="/">
+            Back to Home
+        </a>
+
+    </div>
+
+    <div class="topright">
+
+        <a href="/explore/">
+            Explore
+        </a>
+        |
+        <a href="/users/{{ logname }}/">
+            {{ logname }}
+        </a>
+    </div>
 
     <div id="reactEntry">
         Loading ...
@@ -17,88 +34,7 @@
     <!-- Load JavaScript -->
     <script type="text/javascript" src="{{ url_for('static', filename='js/bundle.js') }}"></script>
 </body>
+
 ...
-<div class="topleft">
-
-    <a href="/">
-        Back to Home
-    </a>
-
-</div>
-
-<div class="topright">
-
-    <a href="/explore/">
-        Explore
-    </a>
-    |
-    <a href="/users/{{ logname }}/">
-        {{ logname }}
-    </a>
-
-    <!-- </div>
-{% for post in posts %}
-<div class="card1">
-
-    <div class="topright">
-        <a href="/posts/{{ post.postid }}/">
-            {{ post.timestamp }}
-        </a>
-    </div>
-    <div class="topleft">
-        <a href="/users/{{ post.owner }}/">
-            <img src="{{ url_for('show_file',filename=post.owner_img_url)}}" height=30 alt="image"> {{post.owner}}
-        </a>
-    </div>
-
-    .
-    <div class="img">
-
-        <img src="{{url_for('show_file',filename=post.img_url)}}" width="400" alt="image">
-
-
-        {% if post.likes == 1 %}
-        {{post.likes}} like
-        {%else%}
-        {{post.likes}} likes
-        {%endif%}
-
-
-        {%if post.logname_likes %}
-        THIS WAS AN "unlike button" COMMENT
-        <form action="/likes/?target=/" method="post" enctype="multipart/form-data">
-            <input type="hidden" name="operation" value="unlike" />
-            <input type="hidden" name="postid" value="{{post.postid}}" />
-            <input type="submit" name="unlike" value="unlike" />
-        </form>
-        {%else%}
-        THIS WAS AN "like button" COMMENT
-        <form action="/likes/?target=/" method="post" enctype="multipart/form-data">
-            <input type="hidden" name="operation" value="like" />
-            <input type="hidden" name="postid" value="{{post.postid}}" />
-            <input type="submit" name="like" value="like" />
-        </form>
-        {%endif%}
-
-        {%for comment in post.comments%}
-
-        <a href="/users/{{comment.owner}}/">
-            {{comment.owner}}
-        </a>
-        {{comment.text}}
-
-        {%endfor%}
-        THIS WAS AN 'comment button' comment
-        <form action="/comments/?target=/" method="post" enctype="multipart/form-data">
-            <input type="hidden" name="operation" value="create" />
-            <input type="hidden" name="postid" value="{{post.postid}}" />
-            <input type="text" name="text" required />
-            <input type="submit" name="comment" value="comment" />
-        </form>
-    </div>
-
-</div>
-
-{%endfor%} -->
 
 </html>

@@ -17,7 +17,7 @@ def create_comment():
     postid = flask.request.args.get('postid')
     json_data = flask.request.json
     text = json_data["text"]
-    
+
     # Insert comment into table
     connection = insta485.model.get_db()
     cur = connection.execute(

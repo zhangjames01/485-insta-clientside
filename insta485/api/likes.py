@@ -61,7 +61,7 @@ def create_like():
             "url": flask.request.path + str(data['likeid']) + '/'
         }
         return flask.jsonify(**context), 201
-        
+
 
 @insta485.app.route('/api/v1/likes/<likeid>/', methods = ['DELETE'])
 def delete_like(likeid):
