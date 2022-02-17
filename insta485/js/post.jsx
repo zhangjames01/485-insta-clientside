@@ -9,9 +9,12 @@ class Post extends React.Component {
     // Initialize mutable state
     super(props);
     this.state = {
-      imgUrl: '', owner: '', comments: [], likes: 0, isLiked: false, ownerImgUrl: '', ownerShowUrl: '', postShowUrl: '', created: '', postid: 0, likeurl: '',
+      imgUrl: '', owner: '', comments: [], likes: 0, isLiked: false, ownerImgUrl: '', ownerShowUrl: '', postShowUrl: '', created: '', postid: 0, likeurl: '', text: '',
     };
     this.handleLike = this.handleLike.bind(this);
+    this.handleDoubleClick = this.handleDoubleClick.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleChange = this.handleChange.bind(this);
   }
 
   componentDidMount() {
@@ -65,16 +68,6 @@ class Post extends React.Component {
       const requestOptions = {
         method: 'DELETE'
       }
-      // fetch("/api/v1/likes/?postid=" + postid)
-      //   .then((response) => {
-      //     if (!response.ok) throw Error(response.statusText);
-      //     return response.json();
-      //   })
-      //   .then((data) => {
-      //     this.setState({
-      //       likeid: data.likeid,
-      //     });
-      //   })
       fetch(this.state.likeurl, requestOptions)
         .then(() => {
           this.setState((prevState) => ({
@@ -84,20 +77,68 @@ class Post extends React.Component {
         })
 
     }
-    // this.setState((prevState) => ({
-    //   isLiked: !prevState.isLiked,
-    // }));
 
+  }
+  handleDoubleClick() {
+    var postid = this.state.postid;
+    if (!this.state.isLiked) {
+      const requestOptions = {
+        method: 'POST'
+      }
+      fetch("/api/v1/likes/?postid=" + postid, requestOptions)
+        .then((response) => {
+          if (!response.ok) throw Error(response.statusText);
+          return response.json();
+        })
+        .then((data) => {
+          this.setState((prevState) => ({
+            isLiked: !prevState.isLiked,
+            likes: prevState.likes + 1,
+            likeurl: data.url,
+          }));
+        })
+    }
+  }
+  handleSubmit = e => {
+    e.preventDefault();
+    var postid = this.state.postid;
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: this.state.text })
+    }
+    fetch("/api/v1/comments/?postid=" + postid, requestOptions)
+      .then((response) => {
+        if (!response.ok) throw Error(response.statusText);
+        return response.json();
+      })
+      .then((data) => {
+        this.setState((prevState) => ({
+          comments: prevState.comments.concat([{
+            commentid: data.commentid,
+            owner: data.owner,
+            ownerShowUrl: data.ownerShowUrl,
+            text: data.text,
+            lognameOwnsThis: data.lognameOwnsthis,
+            url: data.url,
+          }]),
+          text: ''
+        }));
+      })
+  }
+  handleChange(event) {
+    this.setState({ text: event.target.value })
   }
 
   render() {
     // This line automatically assigns this.state.imgUrl to the const variable imgUrl
     // and this.state.owner to the const variable owner
     const {
-      imgUrl, owner, comments, likes, ownerImgUrl, ownerShowUrl, postShowUrl, created, postid, likeurl,
+      imgUrl, owner, comments, likes, ownerImgUrl, ownerShowUrl, postShowUrl, created, postid, likeurl, text,
     } = this.state;
     // Render number of post image and post owner
     const commentList = [];
+    console.log(comments);
     for (let i = 0; i < comments.length; i += 1) {
       const actualComment = {};
       actualComment.owner = comments[i].owner;
@@ -114,9 +155,7 @@ class Post extends React.Component {
     // const timestamp = moment(created + "-05:00", "YYYY-MM-DD HH:mm:ss").fromNow();
     return (
       <div className="post">
-        <a href={postShowUrl}>
-          <img src={imgUrl} alt="pic" />
-        </a>
+        <img src={imgUrl} alt="pic" onDoubleClick={this.handleDoubleClick} />
         <a href={ownerShowUrl}>
           {owner}
           <img src={ownerImgUrl} height="30" alt="pfp" />
@@ -125,8 +164,7 @@ class Post extends React.Component {
           {timestamp}
         </a>
         <p>
-          {likes}
-          likes
+          {likes} likes
           <button className="like-unlike-button" type="button" onClick={this.handleLike}>
             {this.state.isLiked ? 'unlike' : 'like'}
           </button>
@@ -140,6 +178,10 @@ class Post extends React.Component {
             </p>
           ),
         )}
+        <form className="comment-form" onSubmit={this.handleSubmit}>
+          <input type="text" value={this.state.text} onChange={this.handleChange} />
+
+        </form>
       </div>
     );
   }
