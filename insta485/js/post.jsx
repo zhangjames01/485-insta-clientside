@@ -9,7 +9,7 @@ class Post extends React.Component {
     // Initialize mutable state
     super(props);
     this.state = {
-      imgUrl: '', owner: '', comments: [], likes: {}, isLiked: false, ownerImgUrl: '', ownerShowUrl: '', postShowUrl: '', created: '',
+      imgUrl: '', owner: '', comments: [], likes: 0, isLiked: false, ownerImgUrl: '', ownerShowUrl: '', postShowUrl: '', created: '', postid: 0, likeurl: '',
     };
     this.handleLike = this.handleLike.bind(this);
   }
@@ -29,30 +29,73 @@ class Post extends React.Component {
           imgUrl: data.imgUrl,
           owner: data.owner,
           comments: data.comments,
-          likes: data.likes,
+          likes: data.likes.numLikes,
           isLiked: data.likes.lognameLikesThis,
           ownerImgUrl: data.ownerImgUrl,
           ownerShowUrl: data.ownerShowUrl,
           postShowUrl: data.postShowUrl,
           created: data.created,
+          postid: data.postid,
+          likeurl: data.likes.url,
         });
       })
       .catch((error) => console.log(error));
   }
 
   handleLike() {
-    this.setState((prevState) => ({
-      isLiked: !prevState.isLiked,
-    }));
+    var postid = this.state.postid;
+    if (!this.state.isLiked) {
+      const requestOptions = {
+        method: 'POST'
+      }
+      fetch("/api/v1/likes/?postid=" + postid, requestOptions)
+        .then((response) => {
+          if (!response.ok) throw Error(response.statusText);
+          return response.json();
+        })
+        .then((data) => {
+          this.setState((prevState) => ({
+            isLiked: !prevState.isLiked,
+            likes: prevState.likes + 1,
+            likeurl: data.url,
+          }));
+        })
+    }
+    else {
+      const requestOptions = {
+        method: 'DELETE'
+      }
+      // fetch("/api/v1/likes/?postid=" + postid)
+      //   .then((response) => {
+      //     if (!response.ok) throw Error(response.statusText);
+      //     return response.json();
+      //   })
+      //   .then((data) => {
+      //     this.setState({
+      //       likeid: data.likeid,
+      //     });
+      //   })
+      fetch(this.state.likeurl, requestOptions)
+        .then(() => {
+          this.setState((prevState) => ({
+            isLiked: !prevState.isLiked,
+            likes: prevState.likes - 1,
+          }));
+        })
+
+    }
+    // this.setState((prevState) => ({
+    //   isLiked: !prevState.isLiked,
+    // }));
+
   }
 
   render() {
     // This line automatically assigns this.state.imgUrl to the const variable imgUrl
     // and this.state.owner to the const variable owner
     const {
-      imgUrl, owner, comments, likes, ownerImgUrl, ownerShowUrl, postShowUrl, created,
+      imgUrl, owner, comments, likes, ownerImgUrl, ownerShowUrl, postShowUrl, created, postid, likeurl,
     } = this.state;
-
     // Render number of post image and post owner
     const commentList = [];
     for (let i = 0; i < comments.length; i += 1) {
@@ -82,10 +125,10 @@ class Post extends React.Component {
           {timestamp}
         </a>
         <p>
-          {likes.numLikes}
+          {likes}
           likes
           <button className="like-unlike-button" type="button" onClick={this.handleLike}>
-            {this.state.isLiked ? 'like' : 'unlike'}
+            {this.state.isLiked ? 'unlike' : 'like'}
           </button>
         </p>
         {commentList.map(
