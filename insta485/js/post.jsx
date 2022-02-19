@@ -176,14 +176,16 @@ class Post extends React.Component {
     const timestamp = moment.utc(created).fromNow();
     return (
       <div className="post">
-        <img src={imgUrl} alt="pic" onDoubleClick={this.handleDoubleClick} />
         <a href={ownerShowUrl}>
-          {owner}
           <img src={ownerImgUrl} height="30" alt="pfp" />
+          {owner}
         </a>
+        &nbsp;
         <a href={postShowUrl}>
           {timestamp}
         </a>
+        <p />
+        <img src={imgUrl} alt="pic" onDoubleClick={this.handleDoubleClick} />
         <p>
           {likes} likes
           <button className="like-unlike-button" type="button" onClick={this.handleLike}>
@@ -192,11 +194,9 @@ class Post extends React.Component {
         </p>
         {commentList.map(
           (comment) => (
-            <p>
-              <a href={comment.ownerShowUrl}>{comment.owner}</a>
-              {comment.text}
-              {comment.button}
-            </p>
+            <div key={comment.commentid}>
+              <a href={comment.ownerShowUrl}>{comment.owner}</a> {comment.text} {comment.button}
+            </div>
           ),
         )}
         <form className="comment-form" onSubmit={this.handleSubmit}>
