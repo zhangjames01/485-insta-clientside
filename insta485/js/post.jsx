@@ -9,12 +9,13 @@ class Post extends React.Component {
     // Initialize mutable state
     super(props);
     this.state = {
-      imgUrl: '', owner: '', comments: [], likes: 0, isLiked: false, ownerImgUrl: '', ownerShowUrl: '', postShowUrl: '', created: '', postid: 0, likeurl: '', text: '',
+      imgUrl: '', owner: '', comments: [], likes: 0, isLiked: false, ownerImgUrl: '', ownerShowUrl: '', postShowUrl: '', created: '', postid: 0, likeurl: '', text: '', commentid: '',
     };
     this.handleLike = this.handleLike.bind(this);
     this.handleDoubleClick = this.handleDoubleClick.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleChange = this.handleChange.bind(this);
+    this.handleDeleteComment = this.handleDeleteComment.bind(this);
   }
 
   componentDidMount() {
@@ -130,29 +131,49 @@ class Post extends React.Component {
     this.setState({ text: event.target.value })
   }
 
+  handleDeleteComment(commentid) {
+    const requestOptions = {
+      method: 'DELETE',
+    }
+    fetch("/api/v1/comments/" + commentid + "/", requestOptions)
+      .then(() => {
+        this.setState((prevState) => ({
+          comments: this.arrayRemove(prevState.comments, commentid)
+        }));
+      })
+
+  }
+
+  arrayRemove(arr, value) {
+    return arr.filter(function (ele) {
+      return ele.commentid != value
+    });
+  }
+
   render() {
     // This line automatically assigns this.state.imgUrl to the const variable imgUrl
     // and this.state.owner to the const variable owner
     const {
-      imgUrl, owner, comments, likes, ownerImgUrl, ownerShowUrl, postShowUrl, created, postid, likeurl, text,
+      imgUrl, owner, comments, likes, ownerImgUrl, ownerShowUrl, postShowUrl, created, postid, likeurl, text, commentid
     } = this.state;
     // Render number of post image and post owner
     const commentList = [];
-    console.log(comments);
+    let comment_index = 0
     for (let i = 0; i < comments.length; i += 1) {
       const actualComment = {};
       actualComment.owner = comments[i].owner;
       actualComment.ownerShowUrl = comments[i].ownerShowUrl;
       actualComment.text = comments[i].text;
+      actualComment.commentid = comments[i].commentid;
       if (comments[i].lognameOwnsThis) {
-        actualComment.button = <button className="delete-comment-button" type="button"> remove </button>;
+        // console.log(comments[i].commentid)
+        actualComment.button = <button className="delete-comment-button" type="button" onClick={() => this.handleDeleteComment(actualComment.commentid)}> Delete comment </button>;
       } else {
         actualComment.button = <p />;
       }
       commentList.push(actualComment);
     }
     const timestamp = moment.utc(created).fromNow();
-    // const timestamp = moment(created + "-05:00", "YYYY-MM-DD HH:mm:ss").fromNow();
     return (
       <div className="post">
         <img src={imgUrl} alt="pic" onDoubleClick={this.handleDoubleClick} />

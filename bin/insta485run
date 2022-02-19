@@ -3,6 +3,7 @@
 set -Eeuo pipefail
 
 ./bin/insta485db reset
+./bin/insta485db random
 
 export FLASK_ENV=development
 export FLASK_APP=insta485
