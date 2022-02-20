@@ -4,9 +4,9 @@ import insta485
 import hashlib
 from flask import jsonify
 
+
 def authenticate_user(username, password):
     """Authenticate username and password."""
-
     username = flask.request.authorization['username']
     password = flask.request.authorization['password']
 
@@ -25,6 +25,7 @@ def authenticate_user(username, password):
         return username
     flask.abort(403)
 
+
 def pass_check(new, database):
     """Display pass_check."""
     algorithm, salt, curpasshash = database.split('$')
@@ -34,10 +35,14 @@ def pass_check(new, database):
     newpasshash = hash_obj.hexdigest()
     return newpasshash == curpasshash
 
+
 class InvalidUsage(Exception):
+    """Error handling."""
+
     status_code = 400
 
     def __init__(self, message, status_code=None, payload=None):
+        """Error handling."""
         Exception.__init__(self)
         self.message = message
         if status_code is not None:
@@ -45,13 +50,16 @@ class InvalidUsage(Exception):
         self.payload = payload
 
     def to_dict(self):
+        """Error handling."""
         rv = dict(self.payload or ())
         rv['message'] = self.message
         rv['status_code'] = self.status_code
         return rv
 
+
 @insta485.app.errorhandler(InvalidUsage)
 def handle_invalid_usage(error):
+    """Error handling."""
     response = jsonify(error.to_dict())
     response.status_code = error.status_code
     return response

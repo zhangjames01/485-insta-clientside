@@ -5,14 +5,15 @@ from insta485.api.helper import authenticate_user
 from insta485.api.helper import InvalidUsage
 
 
-@insta485.app.route('/api/v1/likes/', methods = ['POST'])
+@insta485.app.route('/api/v1/likes/', methods=['POST'])
 def create_like():
     """Create one like for a specific post."""
     # Authenticate the user
     if flask.session.get('username'):
         logname = flask.session.get('username')
     else:
-        logname = authenticate_user(flask.request.authorization['username'], flask.request.authorization['password'])
+        logname = authenticate_user(flask.request.authorization['username'],
+                                    flask.request.authorization['password'])
 
     postid = flask.request.args.get('postid')
 
@@ -63,14 +64,15 @@ def create_like():
         return flask.jsonify(**context), 201
 
 
-@insta485.app.route('/api/v1/likes/<likeid>/', methods = ['DELETE'])
+@insta485.app.route('/api/v1/likes/<likeid>/', methods=['DELETE'])
 def delete_like(likeid):
     """Delete one like, return 204 on success."""
     # Authenticate the user
     if flask.session.get('username'):
         logname = flask.session.get('username')
     else:
-        logname = authenticate_user(flask.request.authorization['username'], flask.request.authorization['password'])
+        logname = authenticate_user(flask.request.authorization['username'],
+                                    flask.request.authorization['password'])
 
     # If likeid DNE, return 404
     # If user does not own the like, return 403

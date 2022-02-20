@@ -175,17 +175,22 @@ class Post extends React.Component {
     }
     const timestamp = moment.utc(created).fromNow();
     return (
-      <div className="post">
-        <a href={ownerShowUrl}>
-          <img src={ownerImgUrl} height="30" alt="pfp" />
-          {owner}
-        </a>
-        &nbsp;
-        <a href={postShowUrl}>
-          {timestamp}
-        </a>
+      <div className="card1">
+        <div className="topleft" >
+          <a href={ownerShowUrl}>
+            <img src={ownerImgUrl} height="30" alt="pfp" />
+            {owner}
+          </a>
+        </div>
+        <div className="topright">
+          <a href={postShowUrl}>
+            {timestamp}
+          </a>
+        </div>
         <p />
-        <img src={imgUrl} alt="pic" onDoubleClick={this.handleDoubleClick} />
+        &nbsp;
+        &nbsp;
+        <img src={imgUrl} width="400" alt="pic" onDoubleClick={this.handleDoubleClick} />
         <p>
           {likes} likes
           <button className="like-unlike-button" type="button" onClick={this.handleLike}>

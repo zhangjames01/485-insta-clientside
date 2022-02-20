@@ -24,7 +24,6 @@ def show_index():
     connection = insta485.model.get_db()
     # Query database
     logname = flask.session['username']
-
     # find postids of posts posted by logname and users logname is following
     cur = connection.execute(
         "SELECT posts.postid, posts.owner, posts.created "
@@ -37,7 +36,6 @@ def show_index():
     )
     post_data = cur.fetchall()
     posts_list = []
-
     connection = insta485.model.get_db()
     cur = connection.execute(
         "SELECT posts.filename "
@@ -48,7 +46,6 @@ def show_index():
         (logname, logname,)
     )
     file = cur.fetchall()
-
     # find num of likes
     for post in post_data:
         connection = insta485.model.get_db()
@@ -63,7 +60,6 @@ def show_index():
             (logname, post['postid'], logname, post['postid'],)
         )
         file = cur.fetchone()
-
         connection = insta485.model.get_db()
         cur = connection.execute(
             "SELECT users.filename "
@@ -77,7 +73,6 @@ def show_index():
             (logname, post['postid'], logname, post['postid'],)
         )
         user_file = cur.fetchone()
-
         connection = insta485.model.get_db()
         cur = connection.execute(
             "SELECT COUNT(*) "
@@ -88,9 +83,7 @@ def show_index():
             (post['postid'],)
         )
         likes_data = cur.fetchall()
-
         connection = insta485.model.get_db()
-
         cur = connection.execute(
             "SELECT COUNT(*) "
             "FROM likes "
@@ -103,7 +96,6 @@ def show_index():
         if liked_check[0]['COUNT(*)'] != 0:
             logname_likes = True
         # posts.append(likes_data[0]['COUNT(*)')
-
         # find comments and owners of comments
         connection = insta485.model.get_db()
         cur = connection.execute(
@@ -127,7 +119,6 @@ def show_index():
                            "comments": comment_list,
                            "logname_likes": logname_likes
                            })
-
     # Add database info to context
     context = {"logname": logname,
                "posts": posts_list}
@@ -141,7 +132,6 @@ def show_users(username):
         return flask.redirect(flask.url_for('show_login'))
     # connect to database
     connection = insta485.model.get_db()
-
     # abort(404) if username DNE
     cur = connection.execute(
         "SELECT COUNT(*) "
@@ -152,10 +142,8 @@ def show_users(username):
     status = cur.fetchall()
     if status[0]["COUNT(*)"] == 0:
         flask.abort(404)
-
     # query
     logname = flask.session['username']
-
     # Find if user follows logname
     cur = connection.execute(
         "SELECT COUNT(*) "
@@ -169,7 +157,6 @@ def show_users(username):
         logname_follows_username = False
     else:
         logname_follows_username = True
-
     # Find number of posts
     cur = connection.execute(
         "SELECT COUNT(*) "
@@ -178,7 +165,6 @@ def show_users(username):
         ([username])
     )
     num_posts = cur.fetchall()
-
     # Find number of followers
     cur = connection.execute(
         "SELECT COUNT(*) "
@@ -187,7 +173,6 @@ def show_users(username):
         ([username])
     )
     num_followers = cur.fetchall()
-
     # Find number of following
     cur = connection.execute(
         "SELECT COUNT(*) "
@@ -196,7 +181,6 @@ def show_users(username):
         ([username])
     )
     num_following = cur.fetchall()
-
     # Find full name
     cur = connection.execute(
         "SELECT fullname "
@@ -205,7 +189,6 @@ def show_users(username):
         ([username])
     )
     full_name = cur.fetchall()
-
     # A small image for each post
     cur = connection.execute(
         "SELECT postid, filename "
@@ -215,9 +198,7 @@ def show_users(username):
         ([username])
     )
     posts_data = cur.fetchall()
-
     # add database info to context
-
     # make list for
     posts_list = []
     for post in posts_data:
@@ -225,7 +206,6 @@ def show_users(username):
             "postid": post['postid'],
             "img_url": post['filename']
         })
-
     context = {"logname": logname,
                "username": username,
                "logname_follows_username": logname_follows_username,
@@ -244,9 +224,7 @@ def show_followers(username):
     # Connect to database
     if 'username' not in flask.session:
         return flask.redirect(flask.url_for('show_login'))
-
     connection = insta485.model.get_db()
-
     # Abort 404 if username DNE
     # abort(404) if username DNE
     cur = connection.execute(
@@ -258,11 +236,8 @@ def show_followers(username):
     status = cur.fetchall()
     if status[0]['COUNT(*)'] == 0:
         flask.abort(404)
-
     # Query database
-
     # : Add into context
-
     logname = flask.session['username']
     cur = connection.execute(
         "SELECT following.username1, users.filename "
@@ -273,9 +248,7 @@ def show_followers(username):
     )
     peoplefollowers = cur.fetchall()
     followers = []
-
     # Returns a list of people that follow you saved in "followers";
-
     for follower in peoplefollowers:
         cur = connection.execute(
             "SELECT COUNT(*) "
@@ -311,10 +284,8 @@ def show_following(username):
     """Display /users/<user_url_slug>/following."""
     if 'username' not in flask.session:
         return flask.redirect(flask.url_for('show_login'))
-
     # Connect to database
     connection = insta485.model.get_db()
-
     # abort(404) if username DNE
     cur = connection.execute(
         "SELECT COUNT(*) "
@@ -325,7 +296,6 @@ def show_following(username):
     status = cur.fetchall()
     if status[0]["COUNT(*)"] == 0:
         flask.abort(404)
-
     # Query database
     logname = flask.session['username']
     cur = connection.execute(
@@ -373,14 +343,11 @@ def show_post(postid):
 
     if 'username' not in flask.session:
         return flask.redirect(flask.url_for('show_login'))
-
     # Connect to database
     connection = insta485.model.get_db()
-
     # Query into database
     logname = flask.session['username']
     # Find owner and owner_img
-
     connection = insta485.model.get_db()
     cur = connection.execute(
         "SELECT posts.owner, users.filename "
@@ -390,7 +357,6 @@ def show_post(postid):
         ([postid])
     )
     owner = cur.fetchone()
-
     # Find timestamp and img
     connection = insta485.model.get_db()
     cur = connection.execute(
@@ -400,7 +366,6 @@ def show_post(postid):
         ([postid])
     )
     created = cur.fetchall()
-
     # Find number of likes
     connection = insta485.model.get_db()
     cur = connection.execute(
@@ -410,7 +375,6 @@ def show_post(postid):
         ([postid])
     )
     num_likes = cur.fetchall()
-
     connection = insta485.model.get_db()
     cur = connection.execute(
         "SELECT owner, text, commentid "
@@ -419,7 +383,6 @@ def show_post(postid):
         ([postid])
     )
     comments_list = cur.fetchall()
-
     connection = insta485.model.get_db()
     cur = connection.execute(
         "SELECT COUNT(*) "
@@ -432,13 +395,11 @@ def show_post(postid):
     logname_likes = False
     if liked_check[0]['COUNT(*)'] != 0:
         logname_likes = True
-
     comment_list = []
     for comment in comments_list:
         comment_list.append({"owner": comment['owner'],
                             "text": comment['text'],
                              "commentid": comment['commentid']})
-
     context = {"logname": logname,
                "postid": postid,
                "owner": owner['owner'],
@@ -457,10 +418,8 @@ def show_explore():
     """Display /explore."""
     if 'username' not in flask.session:
         return flask.redirect(flask.url_for('show_login'))
-
     # Connect to database
     connection = insta485.model.get_db()
-
     # Query into database
     logname = flask.session['username']
     cur = connection.execute(
@@ -497,7 +456,6 @@ def show_explore():
             "username": follow['username'],
             "user_img_url": follow['filename']
         })
-
     # Add database info to context
     context = {"logname": logname,
                "not_following": follow_list
@@ -544,7 +502,6 @@ def show_edit():
     """Display /accounts/edit."""
     # Connect to database
     connection = insta485.model.get_db()
-
     logname = flask.session['username']
     cur = connection.execute(
         "SELECT filename, fullname, email "
@@ -553,7 +510,6 @@ def show_edit():
         ([logname])
     )
     user_data = cur.fetchall()
-
     context = {"logname": logname,
                "user_img_url": user_data[0]['filename'],
                "fullname": user_data[0]['fullname'],
@@ -576,7 +532,6 @@ def likes():
     """Display /."""
     url = flask.request.args.get('target')
     logname = flask.session['username']
-
     # If the operation is like
     if flask.request.form['operation'] == 'like':
         postid = flask.request.form['postid']
@@ -599,7 +554,6 @@ def likes():
             "VALUES (?, ?) ",
             (logname, postid)
         )
-
     # If the operation is unlike
     elif flask.request.form['operation'] == 'unlike':
         postid = flask.request.form['postid']
@@ -623,7 +577,6 @@ def likes():
             "AND owner = ? ",
             (postid, logname),
         )
-
     # Redirect to URL
     if url:
         return flask.redirect(url)
@@ -646,7 +599,6 @@ def hash_password(password):
 def comments():
     """Display function."""
     logname = flask.session['username']
-
     # If the operation is create
     if flask.request.form['operation'] == 'create':
         text = flask.request.form['text']
@@ -661,7 +613,6 @@ def comments():
             "VALUES (?, ?, ?) ",
             (logname, postid, text)
         )
-
     # If operation is delete
     elif flask.request.form['operation'] == 'delete':
         commentid = flask.request.form['commentid']
@@ -684,7 +635,6 @@ def comments():
             "DELETE FROM comments WHERE commentid = ? AND owner = ? ",
             (commentid, logname,)
         )
-
     # Redirect to URL
     if 'target' in flask.request.args:
         return flask.redirect(flask.request.args['target'])
@@ -695,7 +645,6 @@ def comments():
 def posts():
     """Display function."""
     logname = flask.session['username']
-
     # If the operation is create
     if flask.request.form['operation'] == 'create':
         # unpack flask object
@@ -724,7 +673,6 @@ def posts():
             "VALUES (?, ?) ",
             (uuid_basename, logname)
         )
-
     # If the operation is delete
     elif flask.request.form['operation'] == 'delete':
         postid = flask.request.form['postid']

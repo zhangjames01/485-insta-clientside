@@ -5,6 +5,7 @@ from insta485.api.helper import authenticate_user
 from insta485.api.helper import InvalidUsage
 import sys
 
+
 @insta485.app.route('/api/v1/posts/')
 def get_posts():
     """Return 10 newest posts."""
@@ -14,9 +15,10 @@ def get_posts():
     elif not flask.request.authorization:
         flask.abort(403)
     else:
-        logname = authenticate_user(flask.request.authorization['username'], flask.request.authorization['password'])
+        logname = authenticate_user(flask.request.authorization['username'],
+                                    flask.request.authorization['password'])
 
-    size = flask.request.args.get('size', default=10, type=int)    
+    size = flask.request.args.get('size', default=10, type=int)
     page = flask.request.args.get('page', default=0, type=int)
     postid_lte = flask.request.args.get('postid_lte', default=-1)
     if page < 0 or size < 0:
@@ -39,7 +41,7 @@ def get_posts():
         "AND postid <= ? "
         "OR owner = ? "
         "AND postid <= ? "
-        "ORDER BY postid DESC "        
+        "ORDER BY postid DESC "
         "LIMIT ? OFFSET ?;",
         (logname, postid_lte, logname, postid_lte, size, (size*page))
     )
@@ -60,17 +62,20 @@ def get_posts():
     max_attained = False
 
     if post_data_total['COUNT(*)'] < (page+1)*size:
-        max_attained=True
+        max_attained = True
 
     for post in post_data:
         results.append({"postid": int(post['postid']),
-                        "url": flask.request.path + str((post['postid'])) + '/'})
+                        "url": flask.request.path +
+                        str((post['postid'])) + '/'})
 
     if max_attained:
         next_page = ""
     else:
-        next_page = flask.request.path+("?size="+str(size))+("&page="+str(page+1))+("&postid_lte=")+str(postid_lte)
-        
+        next_page = flask.request.path
+        + ("?size=" + str(size)) + ("&page=" + str(page+1))
+        + ("&postid_lte=") + str(postid_lte)
+
     if flask.request.args:
         context = {
             "next": next_page,
@@ -86,16 +91,18 @@ def get_posts():
 
     return flask.jsonify(**context)
 
+
 @insta485.app.route('/api/v1/posts/<int:postid_url_slug>/')
 def get_post(postid_url_slug):
-    """"Return the details for one post."""
+    """Return the details for one post."""
     # Authenticate the user
     if flask.session.get('username'):
         logname = flask.session.get('username')
     else:
-        logname = authenticate_user(flask.request.authorization['username'], flask.request.authorization['password'])
+        logname = authenticate_user(flask.request.authorization['username'],
+                                    flask.request.authorization['password'])
 
-    connection=insta485.model.get_db()
+    connection = insta485.model.get_db()
     cur = connection.execute(
         "SELECT COUNT(*) "
         "FROM posts "
@@ -120,11 +127,12 @@ def get_post(postid_url_slug):
 
     for comment in comment_data:
         comments.append({"commentid": int(comment['commentid']),
-                        "lognameOwnsThis": logname == comment['owner'],
-                        "owner": comment['owner'],
-                        "ownerShowUrl": "/users/"+comment['owner']+"/",
-                        "text": comment['text'],
-                        "url": "/api/v1/comments/"+ str(comment['commentid']) +"/"})
+                         "lognameOwnsThis": logname == comment['owner'],
+                         "owner": comment['owner'],
+                         "ownerShowUrl": "/users/"+comment['owner']+"/",
+                         "text": comment['text'],
+                         "url": "/api/v1/comments/" +
+                         str(comment['commentid']) + "/"})
 
     # LIKES SECTION
     # Check if logname has liked post
@@ -149,7 +157,7 @@ def get_post(postid_url_slug):
         ([postid_url_slug])
     )
     numLikes = cur.fetchall()
-    
+
     connection = insta485.model.get_db()
     cur = connection.execute(
         "SELECT likeid "
@@ -163,7 +171,7 @@ def get_post(postid_url_slug):
         likes_url = "/api/v1/likes/" + str(like_id[0]['likeid']) + '/'
     else:
         likes_url = None
-    
+
     likes = {
         "lognameLikesThis": lognameLikesThis,
         "numLikes": numLikes[0]['COUNT(*)'],
@@ -190,15 +198,15 @@ def get_post(postid_url_slug):
     owner_pfp = cur.fetchall()
 
     context = {"comments": comments,
-                "created": post_data[0]['created'],
-                "imgUrl": "/uploads/" + post_data[0]['filename'],
-                "likes": likes,
-                "owner": post_data[0]['owner'],
-                "ownerImgUrl": "/uploads/" + owner_pfp[0]['filename'],
-                "ownerShowUrl": "/users/" + post_data[0]['owner'] + '/',
-                "postShowUrl": "/posts/" + str(postid_url_slug) + '/',
-                "postid": postid_url_slug ,
-                "url": flask.request.path
-    }
+               "created": post_data[0]['created'],
+               "imgUrl": "/uploads/" + post_data[0]['filename'],
+               "likes": likes,
+               "owner": post_data[0]['owner'],
+               "ownerImgUrl": "/uploads/" + owner_pfp[0]['filename'],
+               "ownerShowUrl": "/users/" + post_data[0]['owner'] + '/',
+               "postShowUrl": "/posts/" + str(postid_url_slug) + '/',
+               "postid": postid_url_slug,
+               "url": flask.request.path
+               }
 
     return flask.jsonify(**context)

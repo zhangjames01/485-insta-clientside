@@ -5,14 +5,15 @@ from insta485.api.helper import authenticate_user
 from insta485.api.helper import InvalidUsage
 
 
-@insta485.app.route('/api/v1/comments/', methods = ['POST'])
+@insta485.app.route('/api/v1/comments/', methods=['POST'])
 def create_comment():
     """Add one comment to a post."""
     # Authenticate the user
     if flask.session.get('username'):
         logname = flask.session.get('username')
     else:
-        logname = authenticate_user(flask.request.authorization['username'], flask.request.authorization['password'])
+        logname = authenticate_user(flask.request.authorization['username'],
+                                    flask.request.authorization['password'])
 
     postid = flask.request.args.get('postid')
     json_data = flask.request.json
@@ -35,25 +36,26 @@ def create_comment():
     logname_owns = True
 
     context = {
-        "commentid" : recent_id['last_insert_rowid()'],
+        "commentid": recent_id['last_insert_rowid()'],
         "lognameOwnsthis": logname_owns,
         "owner": logname,
         "ownerShowUrl": "/users/"+logname+"/",
         "text": text,
-        "url": "/api/v1/comments/"+ str(recent_id['last_insert_rowid()']) +"/"
+        "url": "/api/v1/comments/"+str(recent_id['last_insert_rowid()'])+"/"
     }
 
     return flask.jsonify(**context), 201
 
 
-@insta485.app.route('/api/v1/comments/<commentid>/', methods = ['DELETE'])
+@insta485.app.route('/api/v1/comments/<commentid>/', methods=['DELETE'])
 def delete_comment(commentid):
     """Delete a comment."""
     # Authenticate the user
     if flask.session.get('username'):
         logname = flask.session.get('username')
     else:
-        logname = authenticate_user(flask.request.authorization['username'], flask.request.authorization['password'])
+        logname = authenticate_user(flask.request.authorization['username'],
+                                    flask.request.authorization['password'])
 
     # If commentid DNE, return 404
     # If the user does not own the comment, return 403
