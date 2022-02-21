@@ -7,9 +7,9 @@ module.exports = {
     "import"
   ],
   "env": {
-      "browser": true,
+    "browser": true,
   },
-
+  "parser": "babel-eslint",
   // Allow use of console.log()
   "rules": {
     "no-console": 0,

@@ -69,12 +69,13 @@ def get_posts():
                         "url": flask.request.path +
                         str((post['postid'])) + '/'})
 
+    sizeStr = "?size=" + str(size)
+    pageStr = "&page=" + str(page+1)
+    post_lteStr = ("&postid_lte=") + str(postid_lte)
     if max_attained:
         next_page = ""
     else:
-        next_page = flask.request.path
-        + ("?size=" + str(size)) + ("&page=" + str(page+1))
-        + ("&postid_lte=") + str(postid_lte)
+        next_page = flask.request.path + sizeStr + pageStr + post_lteStr
 
     if flask.request.args:
         context = {
