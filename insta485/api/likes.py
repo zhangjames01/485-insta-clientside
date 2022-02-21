@@ -38,7 +38,7 @@ def create_like():
         )
         data = cur.fetchone()
         context = {
-            "likeid": str(data['likeid']),
+            "likeid": int(data['likeid']),
             "url": flask.request.path + str(data['likeid']) + '/'
         }
         return flask.jsonify(**context), 200
@@ -58,7 +58,7 @@ def create_like():
         )
         data = cur.fetchone()
         context = {
-            "likeid": str(data['likeid']),
+            "likeid": int(data['likeid']),
             "url": flask.request.path + str(data['likeid']) + '/'
         }
         return flask.jsonify(**context), 201
